@@ -57,10 +57,6 @@ class Game
       else
         throw new Error("#{defendingCard} is not high enough to defend against #{attackingCard}")
 
-
-    # unless @cardComparisonValue(defendingCard) > @cardComparisonValue(attackingCard)
-      # throw new Error("#{defendingCard} is too low to defend #{@attackingCard}")
-
   acceptDefence: (player) ->
     unless player == @attacker
       throw new Error('Only the attacking player may accept the defence')
@@ -94,12 +90,6 @@ class Game
 
   cardValueIsInPlay: (card) ->
     _(@attackingCards).some (otherCard) -> otherCard.value == card.value
-
-  cardComparisonValue: (card) ->
-    if card.suit == @trumps
-      card.value + Deck.HIGHEST_CARD_VALUE
-    else
-      card.value
 
   allCardsHaveBeenDefended: ->
     for card in @attackingCards

@@ -302,21 +302,3 @@ describe 'Game', ->
             game.defend(game.defender, card2, with: card)
 
           itShouldBeForbidden()
-
-  describe 'cardComparisonValue', ->
-    card = null
-
-    beforeEach ->
-      subject = -> game.cardComparisonValue(card)
-
-    context "when the card is a trump", ->
-      beforeEach ->
-        card = { value: 2, suit: Deck.Suits.Hearts }
-        game.trumps = Deck.Suits.Hearts
-
-      it "should be the card's value + Deck.HIGHEST_CARD_VALUE", ->
-        expect(subject()).to.equal(card.value + Deck.HIGHEST_CARD_VALUE)
-
-    context "when the card isn't a trump", ->
-      it "should be the card's value", ->
-        expect(subject()).to.equal(card.value)
