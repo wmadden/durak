@@ -27,7 +27,7 @@ class Game
     unless (@thereAreNoCardsInPlay() && player == @attacker) || @cardValueIsInPlay(card)
       throw new Error("Card value is not yet in play")
 
-    @_takeCardFromPlayer(player, card)
+    player.hand = _(player.hand).without(card)
     @attackingCards.push(card)
 
   defend: (player, attackingCard, with: defendingCard) ->
@@ -39,7 +39,7 @@ class Game
     # Should we check that the card is in the player's hand?
 
     defendCard = =>
-      @_takeCardFromPlayer(player, defendingCard)
+      player.hand = _(player.hand).without(defendingCard)
       attackingCard.defendedBy = defendingCard
 
     if defendingCard.suit == @trumps
@@ -80,8 +80,17 @@ class Game
     if @allCardsHaveBeenDefended()
       throw new Error('May not concede a successful defence')
 
-    @_assignCardsInPlayToDefender()
-    @_resetDefendedCards()
+    assignCardsInPlayToDefender = =>
+      for card in @attackingCards
+        @defender.hand.push(card)
+        @defender.hand.push(card.defendedBy) if card.defendedBy?
+
+    resetDefendedCards = =>
+      for card in @attackingCards
+        delete card.defendedBy
+
+    assignCardsInPlayToDefender()
+    resetDefendedCards()
     @attackingCards = []
     @attacker = @playerAfter(@defender)
     @defender = @playerAfter(@attacker)
@@ -100,17 +109,5 @@ class Game
   playerAfter: (player) ->
     index = @players.indexOf(player) + 1
     @players[index % @players.length]
-
-  _resetDefendedCards: ->
-    for card in @attackingCards
-      delete card.defendedBy
-
-  _assignCardsInPlayToDefender: ->
-    for card in @attackingCards
-      @defender.hand.push(card)
-      @defender.hand.push(card.defendedBy) if card.defendedBy?
-
-  _takeCardFromPlayer: (player, card) ->
-    player.hand = _(player.hand).without(card)
 
 exports.Game = Game
