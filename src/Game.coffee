@@ -15,18 +15,33 @@ class Game
     @attacker = @players[0]
     @defender = @players[1]
     @attackingCards = []
+    @trumpCard = @deck.cards[0]
+    @trumps = @trumpCard.suit
 
   attack: (player, card) ->
     if player == @defender
       throw new Error("Defender may not attack")
 
-    if (@thereAreNoCardsInPlay() && player == @attacker) || @cardValueIsInPlay(card)
-      @attackingCards.push(card)
-      player.hand = _(player.hand).without(card)
-    else
+    # Should we check that the card is in the player's hand?
+
+    unless (@thereAreNoCardsInPlay() && player == @attacker) || @cardValueIsInPlay(card)
       throw new Error("Card value is not yet in play")
 
+    @attackingCards.push(card)
+    player.hand = _(player.hand).without(card)
+
   defend: (player, attackingCard, with: defendingCard) ->
+    unless player == @defender
+      throw new Error("Only the defender can defend")
+    unless _(@attackingCards).contains(attackingCard)
+      throw new Error("Card is not attacking")
+
+    # Should we check that the card is in the player's hand?
+
+    unless @cardComparisonValue(defendingCard) > @cardComparisonValue(attackingCard)
+      throw new Error("#{defendingCard} is too low to defend #{@attackingCard}")
+
+    attackingCard.defendedBy = defendingCard
 
   pass: (player) ->
 
@@ -36,5 +51,11 @@ class Game
 
   cardValueIsInPlay: (card) ->
     _(@attackingCards).some (otherCard) -> otherCard.value == card.value
+
+  cardComparisonValue: (card) ->
+    if card.suit == @trumps
+      card.value + Deck.HIGHEST_CARD_VALUE
+    else
+      card.value
 
 exports.Game = Game

@@ -5,7 +5,7 @@ suit = (name) ->
 generateCards = ->
   result = []
   for name, suit of Deck.Suits
-    for value in [2..14]
+    for value in [2..Deck.HIGHEST_CARD_VALUE]
       result.push new Card( value, suit )
   result
 
@@ -19,6 +19,7 @@ valueName = (value) ->
 
 
 Deck = class Deck
+  @HIGHEST_CARD_VALUE: 14
   @Suits: Object.freeze({
     Hearts: suit('Hearts'),
     Clubs: suit('Clubs'),

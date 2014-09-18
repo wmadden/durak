@@ -55,6 +55,18 @@ describe 'Game', ->
       subject()
       expect(game.defender).to.equal(game.players[1])
 
+    it 'should expose the trump card', ->
+      subject()
+      expect(game.trumpCard).to.exist
+
+    it 'should pick the trump suit', ->
+      subject()
+      expect(game.trumps).to.equal(game.trumpCard.suit)
+
+  itShouldBeForbidden = ->
+    it 'should be forbidden', ->
+      expect(subject).to.throw()
+
   describe 'attack(player, card)', ->
     player = null
     card = null
@@ -84,8 +96,7 @@ describe 'Game', ->
         beforeEach ->
           player = _(game.players).without(game.attacker, game.defender)[0]
 
-        it 'should be forbidden', ->
-          expect(subject).to.throw()
+        itShouldBeForbidden()
 
     context 'and there are cards in play', ->
       beforeEach ->
@@ -101,12 +112,75 @@ describe 'Game', ->
         beforeEach ->
           game.attackingCards.push({ value: card.value+1, suit: Deck.Suits.Hearts})
 
-        it 'should be forbidden', ->
-          expect(subject).to.throw()
+        itShouldBeForbidden()
 
     context 'if the player is the defender', ->
       beforeEach ->
         player = game.defender
 
-      it 'should be forbidden', ->
-        expect(subject).to.throw()
+  describe 'defend(player, attackingCard, with: defendingCard)', ->
+    player = null
+    attackingCard = null
+    defendingCard = null
+
+    beforeEach ->
+      attackingCard = { value: 5, suit: Deck.Suits.Hearts }
+      defendingCard = { value: 5, suit: Deck.Suits.Clubs }
+      game.start()
+      game.trumps = Deck.Suits.Diamonds
+      game.attacker.hand.push(attackingCard)
+
+      subject = -> game.defend(player, attackingCard, with: defendingCard)
+
+    itShouldDefendAgainstTheAttackingCard = ->
+      it 'should defend the attacking card', ->
+        subject()
+        expect(attackingCard.defendedBy).to.equal(defendingCard)
+
+    context 'if the player is not the defender', ->
+      beforeEach ->
+        player = game.attacker
+
+      itShouldBeForbidden()
+
+    context 'when the player is the defender', ->
+      beforeEach ->
+        player = game.defender
+
+      context 'but the attacking card is not in play', ->
+        beforeEach ->
+
+        itShouldBeForbidden()
+
+      context 'and the attacking card is lower in value', ->
+        beforeEach ->
+          attackingCard.value = 4
+          game.attack(game.attacker, attackingCard)
+
+        itShouldDefendAgainstTheAttackingCard()
+
+      context 'but the attacking card is higher in value', ->
+        beforeEach ->
+          attackingCard.value = 6
+          game.attack(game.attacker, attackingCard)
+
+        itShouldBeForbidden()
+
+
+  describe 'cardComparisonValue', ->
+    card = null
+
+    beforeEach ->
+      subject = -> game.cardComparisonValue(card)
+
+    context "when the card is a trump", ->
+      beforeEach ->
+        card = { value: 2, suit: Deck.Suits.Hearts }
+        game.trumps = Deck.Suits.Hearts
+
+      it "should be the card's value + Deck.HIGHEST_CARD_VALUE", ->
+        expect(subject()).to.equal(card.value + Deck.HIGHEST_CARD_VALUE)
+
+    context "when the card isn't a trump", ->
+      it "should be the card's value", ->
+        expect(subject()).to.equal(card.value)
