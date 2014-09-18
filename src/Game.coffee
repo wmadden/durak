@@ -38,11 +38,28 @@ class Game
 
     # Should we check that the card is in the player's hand?
 
-    unless @cardComparisonValue(defendingCard) > @cardComparisonValue(attackingCard)
-      throw new Error("#{defendingCard} is too low to defend #{@attackingCard}")
+    defendCard = =>
+      @_takeCardFromPlayer(player, defendingCard)
+      attackingCard.defendedBy = defendingCard
 
-    @_takeCardFromPlayer(player, defendingCard)
-    attackingCard.defendedBy = defendingCard
+    if defendingCard.suit == @trumps
+      if attackingCard.suit != @trumps
+        defendCard()
+      else if defendingCard.value > attackingCard.value
+        defendCard()
+      else
+        throw new Error("#{defendingCard} is not a high enough trump to defend against #{attackingCard}")
+    else if defendingCard.suit != attackingCard.suit
+      throw new Error("#{defendingCard} is not the same suit as #{attackingCard}")
+    else
+      if defendingCard.value > attackingCard.value
+        defendCard()
+      else
+        throw new Error("#{defendingCard} is not high enough to defend against #{attackingCard}")
+
+
+    # unless @cardComparisonValue(defendingCard) > @cardComparisonValue(attackingCard)
+      # throw new Error("#{defendingCard} is too low to defend #{@attackingCard}")
 
   acceptDefence: (player) ->
     unless player == @attacker
@@ -69,7 +86,7 @@ class Game
 
     @_assignCardsInPlayToDefender()
     @_resetDefendedCards()
-    @attackingCards = [] 
+    @attackingCards = []
     @attacker = @playerAfter(@defender)
     @defender = @playerAfter(@attacker)
 

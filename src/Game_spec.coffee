@@ -125,10 +125,11 @@ describe 'Game', ->
 
     beforeEach ->
       attackingCard = { value: 5, suit: Deck.Suits.Hearts }
-      defendingCard = { value: 5, suit: Deck.Suits.Clubs }
+      defendingCard = { value: 6, suit: Deck.Suits.Hearts }
       game.start()
       game.trumps = Deck.Suits.Diamonds
       game.attacker.hand.push(attackingCard)
+      game.attack(game.attacker, attackingCard)
       game.defender.hand.push(defendingCard)
 
       subject = -> game.defend(player, attackingCard, with: defendingCard)
@@ -154,22 +155,53 @@ describe 'Game', ->
 
       context 'but the attacking card is not in play', ->
         beforeEach ->
+          game.attackingCards = []
 
         itShouldBeForbidden()
 
-      context 'and the attacking card is lower in value', ->
+      context 'and the defending card is a trump', ->
         beforeEach ->
-          attackingCard.value = 4
-          game.attack(game.attacker, attackingCard)
+          defendingCard.suit = game.trumps
 
-        itShouldDefendAgainstTheAttackingCard()
+        context 'and the attacking card is not', ->
+          beforeEach ->
+            attackingCard.suit = Deck.Suits.Clubs
 
-      context 'but the attacking card is higher in value', ->
-        beforeEach ->
-          attackingCard.value = 6
-          game.attack(game.attacker, attackingCard)
+          itShouldDefendAgainstTheAttackingCard()
 
-        itShouldBeForbidden()
+        context 'and the attacking card is a higher trump', ->
+          beforeEach ->
+            attackingCard.suit = game.trumps
+            attackingCard.value = 10
+
+          itShouldBeForbidden()
+
+        context 'and the attacking card is a lower trump', ->
+          beforeEach ->
+            attackingCard.suit = game.trumps
+            attackingCard.value = 2
+
+          itShouldDefendAgainstTheAttackingCard()
+
+      context 'and the defending card is not a trump', ->
+        context 'and they are different suits', ->
+          beforeEach ->
+            defendingCard.suit = Deck.Suits.Clubs
+
+          itShouldBeForbidden()
+
+        context 'and they are the same suit', ->
+          context 'and the attacking card is lower in value', ->
+            beforeEach ->
+              attackingCard.value = 4
+
+            itShouldDefendAgainstTheAttackingCard()
+
+          context 'but the attacking card is higher in value', ->
+            beforeEach ->
+              attackingCard.value = 6
+
+            itShouldBeForbidden()
 
   itShouldProgressTo = (expectedAttackerIndex, expectedDefenderIndex)->
     it "should progress the attacker to player #{expectedAttackerIndex}", ->
