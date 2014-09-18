@@ -1,0 +1,24 @@
+{
+  "name": "durak",
+  "version": "0.0.0",
+  "description": "Durak card game",
+  "main": "bin/durak",
+  "dependencies": {
+    "chai": "^1.9.1",
+    "coffee-script": "^1.8.0",
+    "jasmine-node": "^1.14.5",
+    "mocha": "^1.21.4",
+    "node-inspector": "^0.7.4",
+    "sinon": "^1.10.3",
+    "sinon-chai": "^2.5.0",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.8.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "William Madden",
+  "license": "ISC"
+}
