@@ -129,6 +129,7 @@ describe 'Game', ->
       game.start()
       game.trumps = Deck.Suits.Diamonds
       game.attacker.hand.push(attackingCard)
+      game.defender.hand.push(defendingCard)
 
       subject = -> game.defend(player, attackingCard, with: defendingCard)
 
@@ -136,6 +137,10 @@ describe 'Game', ->
       it 'should defend the attacking card', ->
         subject()
         expect(attackingCard.defendedBy).to.equal(defendingCard)
+
+      it "should remove the card from the player's hand", ->
+        subject()
+        expect(game.defender.hand).to.not.include(defendingCard)
 
     context 'if the player is not the defender', ->
       beforeEach ->
@@ -166,6 +171,105 @@ describe 'Game', ->
 
         itShouldBeForbidden()
 
+  itShouldProgressTo = (expectedAttackerIndex, expectedDefenderIndex)->
+    it "should progress the attacker to player #{expectedAttackerIndex}", ->
+      subject()
+      expect(game.attacker).to.equal(game.players[expectedAttackerIndex])
+
+    it "should progress the defender to player #{expectedDefenderIndex}", ->
+      subject()
+      expect(game.defender).to.equal(game.players[expectedDefenderIndex])
+
+  describe 'acceptDefence', ->
+    player = null
+
+    beforeEach ->
+      game.start()
+      subject = -> game.acceptDefence(player)
+
+    context 'when the player is attacking', ->
+      beforeEach ->
+        player = game.attacker
+
+      context "but they haven't attacked yet", ->
+        itShouldBeForbidden()
+
+      context 'and they have attacked', ->
+        beforeEach ->
+          game.attacker.hand.push(card = { value: 5, suit: Deck.Suits.Hearts })
+          game.attack(game.attacker, card)
+
+        context 'but not all the cards have been defended yet', ->
+          itShouldBeForbidden()
+
+        context 'and all cards have been defended', ->
+          beforeEach ->
+            game.defender.hand.push(card = { value: 6, suit: Deck.Suits.Hearts })
+            game.defend(game.defender, game.attackingCards[0], with: card)
+
+          itShouldProgressTo(1, 2)
+
+    context 'when the player is not attacking', ->
+      beforeEach ->
+        player = game.defender
+
+      itShouldBeForbidden()
+
+  describe 'concedeDefence', ->
+    player = null
+
+    beforeEach ->
+      game.start()
+      subject = -> game.concedeDefence(player)
+
+    context 'when the player is not defending', ->
+      beforeEach ->
+        player = game.attacker
+
+      itShouldBeForbidden()
+
+    context 'when the player is defending', ->
+      beforeEach ->
+        player = game.defender
+
+      context "but they haven't been attacked yet", ->
+        itShouldBeForbidden()
+
+      context 'and they have been attacked', ->
+        card1 = null
+        card2 = null
+        card3 = null
+
+        beforeEach ->
+          game.attacker.hand.push(card1 = { value: 5, suit: Deck.Suits.Hearts })
+          game.attacker.hand.push(card2 = { value: 5, suit: Deck.Suits.Clubs })
+          game.defender.hand.push(card3 = { value: 6, suit: Deck.Suits.Hearts })
+          game.attack(game.attacker, card1)
+          game.attack(game.attacker, card2)
+          game.defend(game.defender, card1, with: card3)
+
+        context 'and not all the cards have been defended yet', ->
+          itShouldProgressTo(2, 3)
+
+          it "should put the cards in play in the conceding player's hand", ->
+            concedingPlayer = game.defender
+            subject()
+            expect(concedingPlayer.hand).to.include.members([card1, card2, card3])
+
+          it "should reset the defended cards", ->
+            subject()
+            expect(card1.defendedBy).to.not.exist
+
+          it 'should clear the attacking cards', ->
+            subject()
+            expect(game.attackingCards).to.be.empty
+
+        context 'but all cards have been defended', ->
+          beforeEach ->
+            game.defender.hand.push(card = { value: 6, suit: Deck.Suits.Clubs })
+            game.defend(game.defender, card2, with: card)
+
+          itShouldBeForbidden()
 
   describe 'cardComparisonValue', ->
     card = null
