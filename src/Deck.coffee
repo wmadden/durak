@@ -1,3 +1,4 @@
+_ = require('underscore')
 suit = (name) ->
   { name: name }
 
@@ -33,6 +34,9 @@ Deck = class Deck
     for i in [0 .. cardsToDeal-1]
       player = players[i % players.length]
       player.hand.push(@cards.pop())
+
+  shuffle: ->
+    @cards = _(@cards).shuffle()
 
 Card = class Card
   constructor: (@value, @suit) ->
