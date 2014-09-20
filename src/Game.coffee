@@ -16,9 +16,9 @@ class Game
     @defender = @players[1]
     @trumpCard = @deck.cards[0]
     @trumps = @trumpCard.suit
-    @newRound()
+    @progressToNextRound()
 
-  newRound: ->
+  progressToNextRound: ->
     @round += 1
     @deck.deal(upTo: 6, to: @players)
     @attackingCards = []
@@ -31,6 +31,9 @@ class Game
 
     unless (@thereAreNoCardsInPlay() && player == @attacker) || @cardValueIsInPlay(card)
       throw new Error("Card value is not yet in play")
+
+    unless @defender.hand.length > @undefendedCards().length
+      throw new Error("Defender can't defend any more cards than are already in play")
 
     player.hand = _(player.hand).without(card)
     @attackingCards.push(card)
@@ -74,6 +77,7 @@ class Game
 
     @attacker = @defender
     @defender = @playerAfter(@attacker)
+    @progressToNextRound()
 
   concedeDefence: (player) ->
     unless player == @defender
@@ -96,14 +100,18 @@ class Game
 
     assignCardsInPlayToDefender()
     resetDefendedCards()
-    @attackingCards = []
     @attacker = @playerAfter(@defender)
     @defender = @playerAfter(@attacker)
+    @progressToNextRound()
+
+  undefendedCards: ->
+    _(@attackingCards).filter (card) -> not card.defendedBy?
 
   thereAreNoCardsInPlay: -> @attackingCards.length == 0
 
   cardValueIsInPlay: (card) ->
-    _(@attackingCards).some (otherCard) -> otherCard.value == card.value
+    _(@attackingCards).some (otherCard) ->
+      otherCard.value == card.value || otherCard.defendedBy?.value == card.value
 
   allCardsHaveBeenDefended: ->
     for card in @attackingCards

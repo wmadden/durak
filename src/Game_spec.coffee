@@ -106,9 +106,29 @@ describe 'Game', ->
       beforeEach ->
         player = game.attacker
 
+      context 'but the defender has no more cards than are already in play', ->
+        beforeEach ->
+          game.attackingCards.push({ value: card.value, suit: Deck.Suits.Clubs })
+          game.defender.hand = [{ value: card.value, suit: Deck.Suits.Diamonds }]
+
+        itShouldBeForbidden()
+
       context "including a card of the same value", ->
         beforeEach ->
           game.attackingCards.push({ value: card.value, suit: Deck.Suits.Clubs })
+
+        it 'should attack with the card', ->
+          subject()
+          expect(game.attackingCards).to.include(card)
+
+        it "should remove the card from the player's hand", ->
+          subject()
+          expect(player.hand).not.to.include(card)
+
+      context "including a card defended by a card of the same value", ->
+        beforeEach ->
+          game.attackingCards.push(attackingCard = { value: card.value + 1, suit: Deck.Suits.Clubs })
+          attackingCard.defendedBy = { value: card.value, suit: Deck.Suits.Clubs }
 
         itShouldAttackWithTheCard()
 
@@ -245,6 +265,20 @@ describe 'Game', ->
 
           itShouldProgressTo(1, 2)
 
+          it 'should clear the attacking cards', ->
+            subject()
+            expect(game.attackingCards).to.be.empty
+
+          it 'should progress to the next round', ->
+            nextRound = game.round + 1
+            subject()
+            expect(game.round).to.equal(nextRound)
+
+          it 'should deal up to six cards to each player', ->
+            sinon.stub(game.deck, 'deal')
+            subject()
+            expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
+
     context 'when the player is not attacking', ->
       beforeEach ->
         player = game.defender
@@ -299,6 +333,16 @@ describe 'Game', ->
           it 'should clear the attacking cards', ->
             subject()
             expect(game.attackingCards).to.be.empty
+
+          it 'should progress to the next round', ->
+            nextRound = game.round + 1
+            subject()
+            expect(game.round).to.equal(nextRound)
+
+          it 'should deal six cards to each player', ->
+            sinon.stub(game.deck, 'deal')
+            subject()
+            expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
 
         context 'but all cards have been defended', ->
           beforeEach ->
