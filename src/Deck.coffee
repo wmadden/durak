@@ -5,7 +5,7 @@ suit = (name) ->
 generateCards = ->
   result = []
   for name, suit of Deck.Suits
-    for value in [2..Deck.HIGHEST_CARD_VALUE]
+    for value in [6..Deck.HIGHEST_CARD_VALUE]
       result.push new Card( value, suit )
   result
 
@@ -32,6 +32,7 @@ Deck = class Deck
   deal: (upTo: cardsPerPlayer, to: players)->
     for player in players
       cardsNeeded = cardsPerPlayer - player.hand.length
+      continue unless cardsNeeded > 0
       for i in [1 .. cardsNeeded]
         return if @cards.length == 0
         player.hand.push(@cards.pop())
@@ -46,7 +47,7 @@ Card = class Card
 
   toString: -> "#{valueName @value} of #{@suit.name}"
 
-  valueOf: ->
+  comparisonValue: ->
     suitNumber = _(Deck.Suits).values().indexOf(@suit)
     suitValue = Deck.HIGHEST_CARD_VALUE * suitNumber
     suitValue + @value
