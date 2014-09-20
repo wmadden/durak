@@ -29,7 +29,7 @@ describe 'Deck', ->
       expect(cardsInSuit(Deck.Suits.Diamonds)).to.have.length(13)
       expect(cardsInSuit(Deck.Suits.Spades)).to.have.length(13)
 
-  describe 'deal(numberOfCards, to: players)', ->
+  describe 'deal(upTo: numberOfCards, to: players)', ->
     deck = null
     numberOfCards = null
     player1 = null
@@ -39,12 +39,40 @@ describe 'Deck', ->
     beforeEach ->
       deck = new Deck()
       players = [player1 = { hand: [] }, player2 = { hand: [] }]
-      subject = -> deck.deal(numberOfCards, to: players)
+      subject = -> deck.deal(upTo: numberOfCards, to: players)
 
     it "should put the given number of cards in the players' hands", ->
       numberOfCards = 2
-      player1Cards = [deck.cards[deck.cards.length-1], deck.cards[deck.cards.length-3]]
-      player2Cards = [deck.cards[deck.cards.length-2], deck.cards[deck.cards.length-4]]
       subject()
-      expect(player1.hand).to.contain.members(player1Cards)
-      expect(player2.hand).to.contain.members(player2Cards)
+      expect(player1.hand).to.have.length(numberOfCards)
+      expect(player2.hand).to.have.length(numberOfCards)
+
+    context 'when a player already has some cards', ->
+      beforeEach ->
+        player1.hand.push { value: 4, suit: Deck.Suits.Hearts }
+
+      it 'should deal up to the given number of cards', ->
+        numberOfCards = 2
+        subject()
+        expect(player1.hand).to.have.length(numberOfCards)
+        expect(player2.hand).to.have.length(numberOfCards)
+
+    context "when it doesn't have enough cards", ->
+      beforeEach ->
+        deck.cards = deck.cards[0..0]
+
+      it 'should deal as many cards as there are to the players in order', ->
+        numberOfCards = 2
+        subject()
+        expect(player1.hand).to.have.length(1)
+        expect(player2.hand).to.have.length(0)
+
+    context "when it is empty", ->
+      beforeEach ->
+        deck.cards = []
+
+      it 'should do nothing', ->
+        numberOfCards = 2
+        subject()
+        expect(player1.hand).to.have.length(0)
+        expect(player2.hand).to.have.length(0)

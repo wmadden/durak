@@ -17,7 +17,6 @@ valueName = (value) ->
     when 13 then 'King'
     when 14 then 'Ace'
 
-
 Deck = class Deck
   @HIGHEST_CARD_VALUE: 14
   @Suits: Object.freeze({
@@ -30,11 +29,12 @@ Deck = class Deck
   constructor: ->
     @cards = generateCards()
 
-  deal: (cardsPerPlayer, { to: players })->
-    cardsToDeal = cardsPerPlayer * players.length
-    for i in [0 .. cardsToDeal-1]
-      player = players[i % players.length]
-      player.hand.push(@cards.pop())
+  deal: (upTo: cardsPerPlayer, to: players)->
+    for player in players
+      cardsNeeded = cardsPerPlayer - player.hand.length
+      for i in [1 .. cardsNeeded]
+        return if @cards.length == 0
+        player.hand.push(@cards.pop())
 
   shuffle: ->
     @cards = _(@cards).shuffle()
@@ -42,6 +42,13 @@ Deck = class Deck
 Card = class Card
   constructor: (@value, @suit) ->
 
-  inspect: -> "(#{valueName @value} of #{@suit.name})"
+  inspect: -> "#{valueName @value} of #{@suit.name}"
+
+  toString: -> "#{valueName @value} of #{@suit.name}"
+
+  valueOf: ->
+    suitNumber = _(Deck.Suits).values().indexOf(@suit)
+    suitValue = Deck.HIGHEST_CARD_VALUE * suitNumber
+    suitValue + @value
 
 exports.Deck = Deck
