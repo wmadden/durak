@@ -45,7 +45,11 @@ describe 'Game', ->
     it 'should deal six cards to each player', ->
       sinon.stub(game.deck, 'deal')
       subject()
-      expect(game.deck.deal).to.have.been.calledWith(6, to: game.players)
+      expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
+
+    it 'should be the first round', ->
+      subject()
+      expect(game.round).to.equal(1)
 
     it "should be the first player's turn to attack", ->
       subject()

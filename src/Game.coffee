@@ -6,17 +6,22 @@ class Game
   constructor: ({ numberOfPlayers }) ->
     @players = []
     for i in [0..numberOfPlayers-1]
-      @players.push new Player(i)
+      @players.push new Player(i, @)
     @deck = new Deck()
+    @round = 0
 
   start: ->
     @deck.shuffle()
-    @deck.deal(6, to: @players)
     @attacker = @players[0]
     @defender = @players[1]
-    @attackingCards = []
     @trumpCard = @deck.cards[0]
     @trumps = @trumpCard.suit
+    @newRound()
+
+  newRound: ->
+    @round += 1
+    @deck.deal(upTo: 6, to: @players)
+    @attackingCards = []
 
   attack: (player, card) ->
     if player == @defender
