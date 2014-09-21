@@ -1,0 +1,6 @@
+#!/usr/bin/env coffee
+
+CLI = require('../src/InteractiveCli').InteractiveCLI
+
+cli = new CLI()
+cli.run()
