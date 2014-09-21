@@ -263,21 +263,68 @@ describe 'Game', ->
             game.defender.hand.push(card = { value: 6, suit: Deck.Suits.Hearts })
             game.defend(game.defender, game.attackingCards[0], with: card)
 
-          itShouldProgressTo(1, 2)
+          context 'and the deck is not empty', ->
+            itShouldProgressTo(1, 2)
 
-          it 'should clear the attacking cards', ->
-            subject()
-            expect(game.attackingCards).to.be.empty
+            it 'should clear the attacking cards', ->
+              subject()
+              expect(game.attackingCards).to.be.empty
 
-          it 'should progress to the next round', ->
-            nextRound = game.round + 1
-            subject()
-            expect(game.round).to.equal(nextRound)
+            it 'should progress to the next round', ->
+              nextRound = game.round + 1
+              subject()
+              expect(game.round).to.equal(nextRound)
 
-          it 'should deal up to six cards to each player', ->
-            sinon.stub(game.deck, 'deal')
-            subject()
-            expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
+            it 'should deal up to six cards to each player', ->
+              sinon.stub(game.deck, 'deal')
+              subject()
+              expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
+
+          context 'and the deck is empty', ->
+            beforeEach ->
+              game.deck.cards = []
+
+            context 'and the defender has no cards', ->
+              beforeEach ->
+                game.defender.hand = []
+
+              context 'and there are other players who still have cards', ->
+                it 'should make the next player with cards the attacker', ->
+                  subject()
+                  expect(game.attacker).to.equal(game.players[2])
+
+                it 'should make the following player the defender', ->
+                  subject()
+                  expect(game.defender).to.equal(game.players[3])
+
+            context 'and only one player has cards', ->
+              beforeEach ->
+                game.players[1].hand = []
+                game.players[2].hand = []
+                game.players[3].hand = []
+
+              it 'should be finished', ->
+                subject()
+                expect(game.isFinished).to.equal(true)
+
+              it 'should make the player the Durak', ->
+                subject()
+                expect(game.finalResult).to.eql({ durak: game.players[0] })
+
+            context 'and no players have cards', ->
+              beforeEach ->
+                game.players[0].hand = []
+                game.players[1].hand = []
+                game.players[2].hand = []
+                game.players[3].hand = []
+
+              it 'should be finished', ->
+                subject()
+                expect(game.isFinished).to.equal(true)
+
+              it 'should be a draw', ->
+                subject()
+                expect(game.durak).to.be.undefined
 
     context 'when the player is not attacking', ->
       beforeEach ->
@@ -343,6 +390,37 @@ describe 'Game', ->
             sinon.stub(game.deck, 'deal')
             subject()
             expect(game.deck.deal).to.have.been.calledWith(upTo: 6, to: game.players)
+
+          context 'and the deck is empty', ->
+            beforeEach ->
+              game.deck.cards = []
+
+            context 'and the next player has no cards', ->
+              beforeEach ->
+                game.players[2].hand = []
+
+              context 'and there are other players who still have cards', ->
+                it 'should make the next player with cards the attacker', ->
+                  subject()
+                  expect(game.attacker).to.equal(game.players[3])
+
+                it 'should make the following player the defender', ->
+                  subject()
+                  expect(game.defender).to.equal(game.players[0])
+
+            context 'and no other players have cards', ->
+              beforeEach ->
+                game.players[0].hand = []
+                game.players[2].hand = []
+                game.players[3].hand = []
+
+              it 'should be finished', ->
+                subject()
+                expect(game.isFinished).to.equal(true)
+
+              it 'should make the defender the Durak', ->
+                subject()
+                expect(game.finalResult).to.eql({ durak: game.players[1] })
 
         context 'but all cards have been defended', ->
           beforeEach ->

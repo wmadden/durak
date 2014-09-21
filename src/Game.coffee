@@ -16,12 +16,22 @@ class Game
     @defender = @players[1]
     @trumpCard = @deck.cards[0]
     @trumps = @trumpCard.suit
+    @deck.deal(upTo: 6, to: @players)
     @progressToNextRound()
 
   progressToNextRound: ->
+    @checkForEndConditions()
+    return if @isFinished
+
     @round += 1
     @deck.deal(upTo: 6, to: @players)
     @attackingCards = []
+
+  checkForEndConditions: ->
+    playersWithCards = _(@players).filter (player) -> player.hand.length > 0
+    if playersWithCards.length <= 1
+      @finalResult = { durak: playersWithCards[0] }
+      @isFinished = true
 
   attack: (player, card) ->
     if player == @defender
@@ -75,8 +85,8 @@ class Game
     unless @allCardsHaveBeenDefended()
       throw new Error('Not all cards have been defended')
 
-    @attacker = @defender
-    @defender = @playerAfter(@attacker)
+    @attacker = @nextPlayerWithCardsAfter(@attacker)
+    @defender = @nextPlayerWithCardsAfter(@attacker)
     @progressToNextRound()
 
   concedeDefence: (player) ->
@@ -100,8 +110,8 @@ class Game
 
     assignCardsInPlayToDefender()
     resetDefendedCards()
-    @attacker = @playerAfter(@defender)
-    @defender = @playerAfter(@attacker)
+    @attacker = @nextPlayerWithCardsAfter(@defender)
+    @defender = @nextPlayerWithCardsAfter(@attacker)
     @progressToNextRound()
 
   undefendedCards: ->
@@ -119,8 +129,11 @@ class Game
         return false
     return true
 
-  playerAfter: (player) ->
-    index = @players.indexOf(player) + 1
-    @players[index % @players.length]
+  nextPlayerWithCardsAfter: (player) ->
+    index = @players.indexOf(player)
+    tail = @players[index+1..]
+    head = if index > 0 then @players[..index-1] else []
+    otherPlayersInOrder = tail.concat head
+    _(otherPlayersInOrder).find (player) -> player.hand.length > 0
 
 exports.Game = Game
